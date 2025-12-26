@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/css/ol.css" type="text/css" />
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      margin: 10px;
+    }
+    .map {
+      width: 100%;
+      height: 480px;
+      margin-bottom: 10px;
+    }
+    .ol-tooltip {
+      position: relative;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      color: white;
+      padding: 4px 8px;
+      opacity: 0.7;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .ol-tooltip-measure {
+      opacity: 1;
+      font-weight: bold;
+    }
+    .ol-tooltip-static {
+      background-color: #ffcc33;
+      color: black;
+      border: 1px solid white;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/build/ol.js"></script>
+  <title>中區甜點推薦地圖</title>
+</head>
+
+<body>
+<h2>中區甜點推薦地圖</h2>
+
+<div id="map" class="map"></div>
+
+<!-- 地圖控制 -->
+<form>
+  <h4>📍 地圖控制</h4>
+  <input type="button" value="起始位置" onclick="GoInitView();" />
+  <input type="button" value="CJSJ" onclick="PanToCJSJ();" />
+  <input type="button" value="法芙尼" onclick="PanToFFN();" />
+  <input type="button" value="法布甜" onclick="PanToFBT();" />
+  <input type="button" value="回憶甜點" onclick="PanToHYTD();" />
+  <input type="button" value="AB" onclick="PanToAB();" />
+  <input type="button" value="蒔初甜點" onclick="PanToSTSUTD();" />
+</form>
+
+<hr>
+
+<!-- 快速定位 -->
+<h4>📌 快速定位</h4>
+<select onchange="flyToLocation(this.value)">
+  <option value="">請選擇店家</option>
+  <option value="CJSJ">CJSJ</option>
+  <option value="FFN">法芙尼</option>
+  <option value="FBT">法布甜</option>
+  <option value="HYTD">回憶甜點</option>
+  <option value="AB">AB 法國人的甜點店</option>
+  <option value="STSUTD">蒔初甜點</option>
+</select>
+
+<input type="checkbox" checked onchange="toggleMarkers(this.checked)"> 顯示地標
+
+<hr>
+
+<div id="mousePosition" style="padding:6px;background:#fff;border:1px solid #ccc;display:inline-block;">
+  經緯度：
+</div>
+
+<script>
+/* ---------- 地圖初始化 ---------- */
+const initCenter = ol.proj.fromLonLat([120.6465, 24.1788]);
+const view = new ol.View({ center: initCenter, zoom: 14 });
+
+const map = new ol.Map({
+  target: "map",
+  layers: [new ol.layer.Tile({ source: new ol.source.OSM() })],
+  view: view,
+});
+
+/* ---------- 地標 ---------- */
+const locations = [
+  { name: "CJSJ", coord: [120.6640, 24.1448] },
+  { name: "法芙尼", coord: [120.6643, 24.1507] },
+  { name: "法布甜", coord: [120.6524, 24.1599] },
+  { name: "回憶甜點", coord: [120.6766, 24.1641] },
+  { name: "AB", coord: [120.6612, 24.1250] },
+  { name: "蒔初甜點", coord: [120.6588, 24.1250] },
+];
+
+const markerSource = new ol.source.Vector();
+locations.forEach(l => {
+  markerSource.addFeature(new ol.Feature({
+    geometry: new ol.geom.Point(ol.proj.fromLonLat(l.coord)),
+    name: l.name
+  }));
+});
+
+const markerLayer = new ol.layer.Vector({
+  source: markerSource,
+  style: f => new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 6,
+      fill: new ol.style.Fill({ color: "#ffcc33" }),
+      stroke: new ol.style.Stroke({ color: "#333", width: 1 })
+    }),
+    text: new ol.style.Text({
+      text: f.get("name"),
+      offsetY: -15,
+      fill: new ol.style.Fill({ color: "#000" }),
+      stroke: new ol.style.Stroke({ color: "#fff", width: 3 })
+    })
+  })
+});
+map.addLayer(markerLayer);
+
+/* ---------- 控制功能 ---------- */
+const CJSJ = ol.proj.fromLonLat([120.6640, 24.1448]);
+const FFN = ol.proj.fromLonLat([120.6643, 24.1507]);
+const FBT = ol.proj.fromLonLat([120.6524, 24.1599]);
+const HYTD = ol.proj.fromLonLat([120.6766, 24.1641]);
+const AB = ol.proj.fromLonLat([120.6612, 24.1250]);
+const STSUTD = ol.proj.fromLonLat([120.6588, 24.1250]);
+
+function GoInitView(){ view.animate({center:initCenter,duration:1200}); }
+function PanToCJSJ(){ view.animate({center:CJSJ,duration:1200}); }
+function PanToFFN(){ view.animate({center:FFN,duration:1200}); }
+function PanToFBT(){ view.animate({center:FBT,duration:1200}); }
+function PanToHYTD(){ view.animate({center:HYTD,duration:1200}); }
+function PanToAB(){ view.animate({center:AB,duration:1200}); }
+function PanToSTSUTD(){ view.animate({center:STSUTD,duration:1200}); }
+
+function flyToLocation(name){
+  const dict={CJSJ,FFN,FBT,HYTD,AB,STSUTD};
+  if(dict[name]) view.animate({center:dict[name],zoom:16,duration:1500});
+}
+
+function toggleMarkers(show){
+  markerLayer.setVisible(show);
+}
+
+/* ---------- 滑鼠經緯度 ---------- */
+map.addControl(new ol.control.MousePosition({
+  projection:"EPSG:4326",
+  coordinateFormat:c=>c[1].toFixed(6)+", "+c[0].toFixed(6),
+  target:document.getElementById("mousePosition")
+}));
+
+/* ---------- 全螢幕 + 比例尺 ---------- */
+map.addControl(new ol.control.FullScreen());
+map.addControl(new ol.control.ScaleLine());
+
+/* ---------- 雙擊導航 ---------- */
+map.on("dblclick",evt=>{
+  const c=ol.proj.toLonLat(evt.coordinate);
+  window.open(`https://www.google.com/maps?q=${c[1]},${c[0]}`);
+});
+</script>
+
+</body>
+</html>
+
