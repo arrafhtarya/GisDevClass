@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>中區甜點推薦地圖</title>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/css/ol.css">
+  <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/build/ol.js"></script>
+  <style>
+    body { font-family: "Microsoft JhengHei", sans-serif; margin:10px; }
+    #map { width: 100%; height: 520px; border:1px solid #aaa; }
+    .panel { margin-top:10px; padding:10px; border:1px solid #ccc; background:#f9f9f9; }
+    button { margin:2px; }
+    input[type="text"] { width:100px; }
+  </style>
+</head>
+
+<body>
+<h2>🍰 中區甜點推薦地圖</h2>
+
+<!-- 地圖 -->
+<div id="map"></div>
+
+<!-- 指北針 -->
+<img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Compass_rose_pale.svg"
+     style="position:absolute;top:15px;right:15px;width:60px;z-index:999;">
+
+<!-- 功能控制區 -->
+<div class="panel">
+  <h4>📍 地圖控制</h4>
+  <button onclick="GoInitView()">起始位置</button>
+  <button onclick="PanToCJSJ()">CJSJ</button>
+  <button onclick="PanToFFN()">法芙尼</button>
+  <button onclick="PanToFBT()">法布甜</button>
+  <button onclick="PanToHYTD()">回憶甜點</button>
+  <button onclick="PanToAB()">AB</button>
+  <button onclick="PanToSTSUTD()">蒔初甜點</button>
+
+  <hr>
+
+  <h4>📐 量測工具</h4>
+  <button onclick="addMeasure('LineString')">測距</button>
+  <button onclick="addMeasure('Polygon')">測面</button>
+
+  <hr>
+
+  <h4>🔍 座標定位</h4>
+  經度 <input type="text" id="lon" placeholder="120.6483">
+  緯度 <input type="text" id="lat" placeholder="24.1799">
+  <button onclick="goToCoord()">定位</button>
+
+  <hr>
+
+  <h4>📊 底圖透明度</h4>
+  <input type="range" min="0" max="1" step="0.1" value="1" onchange="setOpacity(this.value)">
+</div>
+
+<!-- 引入 main.js -->
+<script src="main.js"></script>
+</body>
+</html>
