@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>中區甜點推薦地圖</title>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/css/ol.css">
+<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.9.0/build/ol.js"></script>
+<style>
+  body { font-family: "Microsoft JhengHei", sans-serif; margin:10px; }
+  #map { width:100%; height:520px; border:1px solid #aaa; }
+  .panel { margin-top:10px; padding:10px; border:1px solid #ccc; background:#f9f9f9; }
+  button { margin:2px; }
+  input[type="text"] { width:100px; }
+</style>
+</head>
+<body>
+
+<h2>🍰 中區甜點推薦地圖</h2>
+
+<div id="map"></div>
+
+<!-- 指北針 -->
+<img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Compass_rose_pale.svg"
+     style="position:absolute;top:15px;right:15px;width:60px;z-index:999;">
+
+<div class="panel">
+  <h4>📍 地圖控制</h4>
+  <button onclick="GoInitView()">起始位置</button>
+  <button onclick="PanToCJSJ()">CJSJ</button>
+  <button onclick="PanToFFN()">法芙尼</button>
+  <button onclick="PanToFBT()">法布甜</button>
+  <button onclick="PanToHYTD()">回憶甜點</button>
+  <button onclick="PanToAB()">AB</button>
+  <button onclick="PanToSTSUTD()">蒔初甜點</button>
+
+  <hr>
+
+  <h4>📐 量測工具</h4>
+  <button onclick="addMeasure('LineString')">測距</button>
+  <button onclick="addMeasure('Polygon')">測面</button>
+
+  <hr>
+
+  <h4>🔍 座標定位</h4>
+  經度 <input type="text" id="lon" placeholder="120.6483">
+  緯度 <input type="text" id="lat" placeholder="24.1799">
+  <button onclick="goToCoord()">定位</button>
+
+  <hr>
+
+  <h4>📊 底圖透明度</h4>
+  <input type="range" min="0" max="1" step="0.1" value="1" onchange="setOpacity(this.value)">
+</div>
+
+<script>
+/* ===== 地圖初始化 ===== */
+const initCenter = ol.proj.fromLonLat([120.6465,24.1788]);
+const view = new ol.View({ center:initCenter, zoom:14 });
+const raster = new ol.layer.Tile({ source: new ol.source.OSM() });
+const map = new ol.Map({ target:"map", layers:[raster], view:view });
+
+/* ===== 甜點點位 ===== */
+const locations = [
+  { name:"CJSJ", coord:[120.6640,24.1448] },
+  { name:"法芙尼", coord:[120.6643,24.1507] },
+  { name:"法布甜", coord:[120.6524,24.1599] },
+  { name:"回憶甜點", coord:[120.6766,24.1641] },
+  { name:"AB 法國人的甜點店", coord:[120.6612,24.1250] },
+  { name:"蒔初甜點", coord:[120.6588,24.1250] },
+];
+
+const markerSource = new ol.source.Vector();
+locations.forEach(l=>{
+  markerSource.addFeature(new ol.Feature({
+    geometry:new ol.geom.Point(ol.proj.fromLonLat(l.coord)),
+    name:l.name
+  }));
+});
+
+const markerLayer = new ol.layer.Vector({
+  source:markerSource,
+  style:f=>new ol.style.Style({
+    image:new ol.style.Circle({
+      radius:6,
+      fill:new ol.style.Fill({color:"#ffcc33"}),
+      stroke:new ol.style.Stroke({color:"#333", width:1})
+    }),
+    text:new ol.style.Text({
+      text:f.get("name"),
+      offsetY:-15,
+      fill:new ol.style.Fill({color:"#000"}),
+      stroke:new ol.style.Stroke({color:"#fff", width:3})
+    })
+  })
+});
+map.addLayer(markerLayer);
+
+/* ===== PanTo 功能 ===== */
+const CJSJ = ol.proj.fromLonLat([120.6640,24.1448]);
+const FFN = ol.proj.fromLonLat([120.6643,24.1507]);
+const FBT = ol.proj.fromLonLat([120.6524,24.1599]);
+const HYTD = ol.proj.fromLonLat([120.6766,24.1641]);
+const AB = ol.proj.fromLonLat([120.6612,24.1250]);
+const STSUTD = ol.proj.fromLonLat([120.6588,24.1250]);
+
+function GoInitView(){ view.animate({center:initCenter, zoom:14, duration:1200}); }
+function PanToCJSJ(){ view.animate({center:CJSJ, duration:1200}); }
+function PanToFFN(){ view.animate({center:FFN, duration:1200}); }
+function PanToFBT(){ view.animate({center:FBT, duration:1200}); }
+function PanToHYTD(){ view.animate({center:HYTD, duration:1200}); }
+function PanToAB(){ view.animate({center:AB, duration:1200}); }
+function PanToSTSUTD(){ view.animate({center:STSUTD, duration:1200}); }
+
+/* ===== 新增功能 ===== */
+// 量測
+let draw;
+const measureSource = new ol.source.Vector();
+const measureLayer = new ol.layer.Vector({ source: measureSource });
+map.addLayer(measureLayer);
+function addMeasure(type){
+  map.removeInteraction(draw);
+  draw = new ol.interaction.Draw({ source: measureSource, type:type });
+  map.addInteraction(draw);
+}
+
+// 點擊顯示座標
+map.on('singleclick', function(evt){
+  const c = ol.proj.toLonLat(evt.coordinate);
+  alert(`經度：${c[0].toFixed(6)}\n緯度：${c[1].toFixed(6)}`);
+});
+
+// 經緯度輸入定位
+function goToCoord(){
+  const lon=parseFloat(document.getElementById("lon").value);
+  const lat=parseFloat(document.getElementById("lat").value);
+  if(isNaN(lon)||isNaN(lat)){ alert("請輸入正確經緯度"); return; }
+  view.animate({center:ol.proj.fromLonLat([lon,lat]), zoom:16, duration:1200});
+}
+
+// 底圖透明度
+function setOpacity(val){ raster.setOpacity(val); }
+
+</script>
+</body>
+</html>
